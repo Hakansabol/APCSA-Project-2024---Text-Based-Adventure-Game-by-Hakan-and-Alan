@@ -53,8 +53,6 @@ static String DESC_Common = "Stepping into the prison's common room, you are sur
 
 static String DESC_Cafeteria = "As you enter the cafeteria, you are overwhelmed by the smell of decaying flesh and rotting food. You suppose the robotic guards lack a sense of smell, but you wonder how they managed to not poison you to death yet. You do see a refrigerator, and gain a bit of hope for finding edible food.\n\nYou also see a door leading into a small cupboard.";
 
-static String DESC_WardensRoom = "The warden is luckily nowhere to be found. In fact, you can't ever remember seeing a warden before. No matter, there has to be some useful stuff here. Maybe the computer on the warden's desk, or the various papers?";
-
 static String theascii =    ":--------------===*%@@@@%@%#=-----------------\r\n" + //
                             ":-::::-::------++*#%%@@@@@%%#-----------------\r\n" + //
                             ":-::::::::-----=##*#*++++++%%=----------------\r\n" + //
@@ -80,4 +78,23 @@ static String theascii =    ":--------------===*%@@@@%@%#=-----------------\r\n"
                             "----=@@@@@@@@@@@%%%%###%%@@@@@@@@@@@@@@@@@%/ |\r\n" + //
                             "----=@@@@@@@@@@@%%%%%@%%%@@@@@@@@@@@@@@@@/   |\r\n" + //
                             "----+@@@@@@@@@@@%%###%%%%%@@@@@@@@@@@@//  15/ ";
+
+    static String DESC_Hallway_First = "You take steps north and into the hallway. You look up and down the hallway to see a multitude of prison cells. But that isn't important now. To your left is an unlocked door that should lead to the common room. At the east end of the hallway, you see a locked door labeled by the word \"Exit\" and the number two. More good luck?!";
+
+    static String DESC_Hallway = "You find yourself in the hallway again. To the east is your escape, emblazoned with the number 2 and the word EXIT, and to the west, the prison's common room.";
+    static String DESC_Hallway_Open = "You find yourself in the hallway again. The exit door to the east is open! But the common room still invites you to go west... You can't tell why.";
+
+    static String DESC_Common(int cellarItemsCount, boolean chairGrabbed) { return "You're in the prison's common room. It's honestly pretty nice here, but you can't delay. " + (!chairGrabbed ? "" : "There's a single chair in the room. ") + "To your east is the hallway with the escape door. To the north is a small cellar with a red number " + cellarItemsCount + " above its strong frame. The door is slightly ajar, you should be able to get in. To the south is a metal door with the number 5 written in a massive numeral above it." + (cellarItemsCount >= 5 ? " It's open and seems to be inviting you in." : ""); }
+    static String GRAB_Chair = "You pick up the chair and hold it over your head. It's pretty heavy, but you never know when your legs will get tired. It's important.";
+
+    static String DESC_Cellar = "You wiggle your way into the cellar. There's a massive pressure plate on the ground. It seems like if you drop some of your precious belongings, something helpful might happen. To the south lies the common room.";
+    static String Drop_Two = "You drop your second item onto the trapdoor, and a loud door sound rings through the hallway.";
+    static String Drop_Five = "You drop your fourth item onto the trapdoor, and a loud door sound sounds in the common.";
+
+    static String DESC_ControlRoom = "You walk into room you opened by placing four items on the pressure plate. Once inside, you see a large lever almost begging to be pulled. Above it is bright red and yellow text written in a language you can't read. The common room is to your north.";
+
+    static String USE_Lever = "The lever is extremely difficult to pull, like it hasn't been used in centuries. However, after great effort, you pull it down. Immediately, loud sirens begin to blare. You'd better get out of here. You're pretty sure you remember the route...";
+
+    static String DESC_WardensRoom = "The warden is luckily nowhere to be found. In fact, you can't ever remember seeing a warden before. No matter, there has to be some useful stuff here. Maybe the computer on the warden's desk, or the papers strewn about?";
+
 }

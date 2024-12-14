@@ -1,5 +1,11 @@
 // hakan and alan
 
+// Hints:
+// The cell door combination requires the second digit of each number found in the prison
+// You need to drop 4 items in the pressure plate room to unlock the control room.
+// You can find three items in the cell and one item in the common room. There were supposed to be items in the maze, but I'm too tired and annoyed to implement them.
+// In order to survive the control room interaction, you need to be very precise in your movement.
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -7,16 +13,20 @@ import java.util.Scanner;
 //#region RUNTIME
 class runtime {
     static runtime r;
-    static boolean fastType = false;
+    static boolean fastType = true;
     static Scanner keyboard = new Scanner(System.in);
     static ArrayList<Room> rooms = new ArrayList<>(); 
     static ArrayList<String> items = new ArrayList<>();
+    public int bombImminent = -1;
     public boolean hasKey() { return items.contains("KEY"); }
     public Room findRoom(String name) {
         for (Room iterRoom : rooms) {
             if (iterRoom.Name().equals(name)) return iterRoom;
         }
         return rooms.get(0);
+    }
+    public int getItemsDroppedInPressureRoom() {
+        return findRoom("PRESSURE PLATE ROOM").droppedItems.size();
     }
     @SuppressWarnings("ConvertToStringSwitch")
     public void run() throws InterruptedException {
@@ -27,9 +37,21 @@ class runtime {
         rooms.add(new PrisonCell());
         rooms.add(new Hallway());
         rooms.add(new Common());
-        rooms.add(new Cafeteria());
-        rooms.add(new TrapdoorRoom());
-        rooms.add(new WardensRoom());
+        rooms.add(new ControlRoom());
+        rooms.add(new PressureRoom());
+        rooms.add(new OuterBanks());
+        rooms.add(new MazeRoom1());
+        rooms.add(new MazeRoom2());
+        rooms.add(new MazeRoom3());
+        rooms.add(new MazeRoom4());
+        rooms.add(new MazeRoom5());
+        rooms.add(new MazeRoom6());
+        rooms.add(new MazeRoom7());
+        rooms.add(new MazeRoom8());
+        rooms.add(new MazeRoom9());
+        rooms.add(new MazeRoom10());
+        
+
         
         Room currentRoom = rooms.get(1);
 
@@ -117,6 +139,9 @@ class runtime {
                         slowType(droppedItemsString);
                     }
                 }
+                else {
+                    slowType("I don't know where that is.");
+                }
             }
             else if (cmd.equals( "PICKUP") ){
                 int item = currentRoom.droppedItems.indexOf(inputs.itemManagement(obj));
@@ -146,6 +171,18 @@ class runtime {
                     currentRoom.droppedItems.add(items.get(item));
                     items.remove(item);
                     slowType("You placed the " + inputs.itemManagement(obj) + " back on the ground.", typeSpeedSlow);
+                    if (currentRoom == findRoom("PRESSURE PLATE ROOM")) {
+                        if (getItemsDroppedInPressureRoom() == 2) { 
+                            System.out.println();
+                            runtime.slowType( draft.Drop_Two );
+                            findRoom("Outer Banks").isLocked = false;
+                        }
+                        if (getItemsDroppedInPressureRoom() == 4) {
+                            System.out.println();
+                            runtime.slowType( draft.Drop_Five );
+                            findRoom("CONTROL ROOM").isLocked = false;
+                        }
+                    }
                 }
             }
             else if (cmd.equals("LOOK")) {
@@ -208,10 +245,21 @@ class runtime {
                         slowType(tryGetItem);
                     }
                     System.out.println();
+                    if (bombImminent > 0) {
+                        bombImminent --;
+                        slowType("\nThe sirens continue behind you...\n");
+                        if (bombImminent == 0) {
+                            slowType("The sirens suddenly stop. Then, you start to hear explosions behind you. You're too late. You have only a moment for regrets before your body is disintegrated by the explosions.", 15);
+                            System.exit(1);
+                        }
+                    }
                     continue;
                 }
                 Room nextRoom = findRoom(currentRoom.roomLinks.getOrDefault(cmd, draft.genfail));
-                if (nextRoom != rooms.get(0)) {
+                if (nextRoom.isLocked) {
+                    slowType("");
+                }
+                else if (nextRoom != rooms.get(0)) {
                     currentRoom = nextRoom;
                     System.out.print("\nYou are in: ");
                     System.out.println(currentRoom.Name());
@@ -240,9 +288,25 @@ class runtime {
                         slowType(droppedItemsString);
                     }
                     System.out.println();
+                    if (bombImminent > 0) {
+                        bombImminent --;
+                        slowType("\nThe sirens continue behind you...\n");
+                        if (bombImminent == 0) {
+                            slowType("The sirens suddenly stop. Then, you start to hear explosions behind you. You're too late. You have only a moment for regrets before your body is disintegrated by the explosions.", 15);
+                            System.exit(1);
+                        }
+                    }
                     continue;
                 }
-                slowType("I don't understand what you're trying to say");
+                slowType("I'm not sure what you're trying to say");
+            }
+            if (bombImminent > 0) {
+                bombImminent --;
+                slowType("\nThe sirens continue behind you...\n");
+                if (bombImminent == 0) {
+                    slowType("The sirens suddenly stop. Then, you start to hear explosions behind you. You're too late. You have only a moment for regrets before your body is disintegrated by the explosions.", 15);
+                    System.exit(1);
+                }
             }
             System.out.println();
         }     
@@ -278,15 +342,12 @@ public class GameProject {
 }
 
 //#region ROOMS
-/*
-* ROOMS (CLASSES)
-*/
 class Room {
     boolean isFirst = true;
     String Name() {
         return "ROOM MISSING";
     }
-    String Description() {
+    String Description() throws InterruptedException {
         return "default room";
     }
     boolean isLocked = false;
@@ -384,21 +445,24 @@ class PrisonCell extends Room {
             if (inputCombination.length() != 4) runtime.slowType(draft.Use_Key_Invalid);
         }
         if( inputCombination.equals("5917") ) {
-            roomLinks.put("hallway", "HALLWAY");
-            roomLinks.put("hw", "HALLWAY");
-            roomLinks.put("h", "HALLWAY");
-            roomLinks.put("forward", "HALLWAY");
-            roomLinks.put("out", "HALLWAY");
-            roomLinks.put("exit", "HALLWAY");
+            runtime.r.findRoom("HALLWAY").isLocked = false;
             return draft.Use_Key_Success ;
         }
         else 
-            return draft.Use_Key_Failure;
+        return draft.Use_Key_Failure;
     }
-
+    
     boolean doorUnlocked;
-
+    
     public PrisonCell() {
+        roomLinks.put("hallway", "HALLWAY");
+        roomLinks.put("hw", "HALLWAY");
+        roomLinks.put("h", "HALLWAY");
+        roomLinks.put("north", "HALLWAY");
+        roomLinks.put("n", "HALLWAY");
+        roomLinks.put("forward", "HALLWAY");
+        roomLinks.put("out", "HALLWAY");
+        roomLinks.put("exit", "HALLWAY");
         objects.add("Bed");
         objects.add("POLE");
         objects.add("Toilet");
@@ -419,19 +483,30 @@ class Hallway extends Room {
     }
     @Override
     String Description() {
-        return "some cells left and right or smth ";
+        isFirst = false;
+        return isFirst ? draft.DESC_Hallway_First : draft.DESC_Hallway;
     }
 
     public Hallway() {
         roomLinks.put("prison cell", "PRISON CELL");
         roomLinks.put("cell", "PRISON CELL");
+        roomLinks.put("prison", "PRISON CELL");
+        roomLinks.put("south", "PRISON CELL");
+        roomLinks.put("s", "PRISON CELL");
         roomLinks.put("common", "COMMON");
         roomLinks.put("forward", "COMMON");
         roomLinks.put("out", "COMMON");
         roomLinks.put("exit", "COMMON");
+        roomLinks.put("west", "COMMON");
+        roomLinks.put("w", "COMMON");
+        roomLinks.put("left", "COMMON");
+        roomLinks.put("east", "Outer Banks");
+        roomLinks.put("e", "Outer Banks");
+        roomLinks.put("right", "Outer Banks");
+        roomLinks.put("leave", "Outer Banks");
+        isLocked = true;
     }
 }
-
 class Common extends Room {
     @Override
     String Name() {
@@ -439,59 +514,103 @@ class Common extends Room {
     }
     @Override
     String Description() {
-        return draft.DESC_Common;
+        isFirst = false;
+        return draft.DESC_Common(runtime.r.getItemsDroppedInPressureRoom(), objects.contains("CHAIR"));
+    }
+    @Override
+    String Grab(String targetItem) {
+        if (targetItem.equals("CHAIR")) {
+            return objects.remove("CHAIR") ? draft.GRAB_Chair : "";
+        }
+        return draft.genfail;
     }
 
     public Common() {
         roomLinks.put("hallway", "HALLWAY");
         roomLinks.put("hw", "HALLWAY");
-        roomLinks.put("kitchen", "CAFETERIA");
-        roomLinks.put("cafeteria", "CAFETERIA");
-        roomLinks.put("cafe", "CAFETERIA");
-        roomLinks.put("upward", "CAFETERIA");
-        roomLinks.put("north", "CAFETERIA");
-        roomLinks.put("trapdoor", "TRAPDOOR ROOM");
-        roomLinks.put("right", "TRAPDOOR ROOM");
-        roomLinks.put("east", "TRAPDOOR ROOM");
+        roomLinks.put("e", "HALLWAY");
+        roomLinks.put("east", "HALLWAY");
+        roomLinks.put("back", "HALLWAY");
+        roomLinks.put("return", "HALLWAY");
+        roomLinks.put("north", "PRESSURE PLATE ROOM");
+        roomLinks.put("n", "PRESSURE PLATE ROOM");
+        roomLinks.put("up", "PRESSURE PLATE ROOM");
+        roomLinks.put("left", "PRESSURE PLATE ROOM");
+        roomLinks.put("pressure", "PRESSURE PLATE ROOM");
+        roomLinks.put("plate", "PRESSURE PLATE ROOM");
+        roomLinks.put("weight", "PRESSURE PLATE ROOM");
+        roomLinks.put("depress", "PRESSURE PLATE ROOM");
+        roomLinks.put("control", "CONTROL ROOM");
+        roomLinks.put("right", "CONTROL ROOM");
+        roomLinks.put("south", "CONTROL ROOM");
+        roomLinks.put("control room", "CONTROL ROOM");
+        roomLinks.put("s", "CONTROL ROOM");
+        roomLinks.put("d", "CONTROL ROOM");
+        objects.add("CHAIR");
     }
 }
-class Cafeteria extends Room {
+class PressureRoom extends Room {
     @Override
     String Name() {
-        return "CAFETERIA";
+        return "PRESSURE PLATE ROOM";
     }
     @Override
     String Description() {
-        return draft.DESC_Cafeteria;
-    }
-
-    public Cafeteria() {
-        roomLinks.put("back", "COMMON");
-        roomLinks.put("south", "COMMON");
-        roomLinks.put("downward", "COMMON");
-        roomLinks.put("down", "COMMON");
-        roomLinks.put("common", "COMMON");
-
-    }
-}
-class TrapdoorRoom extends Room {
-    @Override
-    String Name() {
-        return "TRAPDOOR ROOM";
-    }
-    @Override
-    String Description(){
-          return "You're in a small, dark cellr made entirely of rough stone. The only light in thhe";
+        isFirst = false;
+        return draft.DESC_Cellar;
     }
     
 
-    public TrapdoorRoom() {
+    public PressureRoom() {
         roomLinks.put("common", "COMMON");
         roomLinks.put("back", "COMMON");
-        roomLinks.put("left", "COMMON");
-        roomLinks.put("west", "COMMON");
+        roomLinks.put("c", "COMMON");
+        roomLinks.put("south", "COMMON");
+        roomLinks.put("s", "COMMON");
+        roomLinks.put("down", "COMMON");
         roomLinks.put("out", "COMMON");
         roomLinks.put("exit", "COMMON");
+        roomLinks.put("leave", "COMMON");
+    }
+}
+class ControlRoom extends Room {
+    @Override
+    String Name() {
+        return "CONTROL ROOM";
+    }
+    @Override
+    String Description(){
+        isFirst = false;
+        return draft.DESC_ControlRoom;
+    }
+    @Override
+    String Grab(String itemUsed) throws InterruptedException {
+        if (itemUsed == "lever" || itemUsed == "pull" || itemUsed == "LEVER") {
+            runtime.r.bombImminent = 10; // gives one input of leeway
+            return draft.USE_Lever;
+        }
+        return draft.genfail;
+    }
+    @Override
+    String Use(String itemUsed) throws InterruptedException {
+        if (itemUsed.equals("LEVER") || itemUsed.equals("lever")) {
+            runtime.r.bombImminent = 10;
+            return draft.USE_Lever;
+        }
+        return draft.genfail;
+    }
+    
+
+    public ControlRoom() {
+        roomLinks.put("common", "COMMON");
+        roomLinks.put("back", "COMMON");
+        roomLinks.put("c", "COMMON");
+        roomLinks.put("north", "COMMON");
+        roomLinks.put("n", "COMMON");
+        roomLinks.put("out", "COMMON");
+        roomLinks.put("exit", "COMMON");
+        roomLinks.put("leave", "COMMON");
+        objects.add("Lever");
         isLocked = true;
     }
 }
@@ -502,142 +621,311 @@ class OuterBanks extends Room {
     }
     @Override
     String Description(){
-          return "You're now outside, behind the prison where there's a small forest ";
+          return mazeText.OuterBanks_Desc;
     }
     
 
     public OuterBanks() {
-        roomLinks.put("common", "COMMON");
-        roomLinks.put("back", "COMMON");
-        roomLinks.put("left", "COMMON");
-        roomLinks.put("west", "COMMON");
-        roomLinks.put("out", "COMMON");
-        roomLinks.put("down", "MazeRoom1");
-        roomLinks.put("south", "MazeRoom1");
-        roomLinks.put("right", "MazeRoom2");
-        roomLinks.put("east", "MazeRoom2");
-        roomLinks.put("up", "MazeRoom3");
-        
-        isLocked = true;
-    }
-}
-class WardensRoom extends Room {
-    @Override
-    String Name() {
-        return "Warden's Office";
-    }
-    @Override
-    String Description(){
-          return "You're now outside, behind the prison where there's a small forest ";
-    }
-    
-
-    public WardensRoom () {
         roomLinks.put("hallway", "HALLWAY");
-        roomLinks.put("hw", "HALLWAY");
         roomLinks.put("back", "HALLWAY");
-        roomLinks.put("exit", "HALLWAY");
-        roomLinks.put("leave", "HALLWAY");
-        roomLinks.put("east", "HALLWAY");
-        roomLinks.put("e", "HALLWAY");
+        roomLinks.put("left", "HALLWAY");
+        roomLinks.put("west", "HALLWAY");
+        roomLinks.put("w", "HALLWAY");
         roomLinks.put("out", "HALLWAY");
-        roomLinks.put("away", "HALLWAY");
-        roomLinks.put("cell", "HALLWAY");
+        roomLinks.put("down", "Maze Room 1");
+        roomLinks.put("south", "Maze Room 1");
+        roomLinks.put("s", "Maze Room 1");
+        roomLinks.put("right", "Maze Room 2");
+        roomLinks.put("east", "Maze Room 2");
+        roomLinks.put("e", "Maze Room 2");
+        roomLinks.put("north", "Maze Room 3");
+        roomLinks.put("up", "Maze Room 3");
+        roomLinks.put("n", "Maze Room 3");
         
         isLocked = true;
     }
 }
 
-class MazeRoom1 extends Room {
-    @Override
-    String Name() {
-        return "Maze Room 1";
-    }
-    @Override
-    String Description(){
-          return "You have hit a dead end, travel another way to reach the exit";
-    }
-    
+    //#region MAZE
+    class MazeRoom1 extends Room {
+        @Override
+        String Name() {
+            return "Maze Room 1";
+        }
+        @Override
+        String Description(){
+                return mazeText.MazeRoom1_Desc;
+        }
 
-    public MazeRoom1() {
-        roomLinks.put("outerbanks", "OuterBanks");
-        roomLinks.put("back", "OuterBanks");
-        roomLinks.put("out", "OuterBanks");
-        roomLinks.put("exit", "OuterBanks");
-        isLocked = true;
+        public MazeRoom1() {
+            roomLinks.put("Outer Banks", "Outer Banks");
+            roomLinks.put("back", "Outer Banks");
+            roomLinks.put("out", "Outer Banks");
+            roomLinks.put("exit", "Outer Banks");
+            roomLinks.put("n", "Outer Banks");
+            roomLinks.put("north", "Outer Banks");
+        }
     }
-}
-class MazeRoom2 extends Room {
-    @Override
-    String Name() {
-        return "Maze Room 2";
-    }
-    @Override
-    String Description(){
-          return "There is a fork in the road pick which way to proceed";
-    }
-    
+    class MazeRoom2 extends Room {
+        @Override
+        String Name() {
+            return "Maze Room 2";
+        }
+        @Override
+        String Description(){
+            return mazeText.MazeRoom2_Desc;
+        }
+        
 
-    public MazeRoom2() {
-        roomLinks.put("back", "OuterBanks");
-        roomLinks.put("left", "OuterBanks");
-        roomLinks.put("west", "OuterBanks");
-        roomLinks.put("straight", "MazeRoom5");
-        roomLinks.put("east", "MazeRoom5");
-        roomLinks.put("out", "OuterBanks");
-        roomLinks.put("up", "MazeRoom4");
-        roomLinks.put("north", "MazeRoom4");
-        roomLinks.put("exit", "OuterBanks");
-        roomLinks.put("down", "MazeRoom6");
-        roomLinks.put("south", "MazeRoom6");
-        isLocked = true;
+        public MazeRoom2() {
+            roomLinks.put("back", "Outer Banks");
+            roomLinks.put("left", "Outer Banks");
+            roomLinks.put("west", "Outer Banks");
+            roomLinks.put("w", "Outer Banks");
+            roomLinks.put("straight", "Maze Room 5");
+            roomLinks.put("east", "Maze Room 5");
+            roomLinks.put("e", "Maze Room 5");
+            roomLinks.put("out", "Outer Banks");
+            roomLinks.put("up", "Maze Room 4");
+            roomLinks.put("north", "Maze Room 4");
+            roomLinks.put("n", "Maze Room 4");
+            roomLinks.put("exit", "Outer Banks");
+            roomLinks.put("down", "Maze Room 6");
+            roomLinks.put("south", "Maze Room 6");
+            roomLinks.put("s", "Maze Room 6");
+        }
     }
-}
-class MazeRoom3 extends Room {
-    @Override
-    String Name() {
-        return "Maze Room 3";
-    }
-    @Override
-    String Description(){
-          return "You have hit a dead end travel another way to reach the exit";
-    }
-    
+    class MazeRoom3 extends Room {
+        @Override
+        String Name() {
+            return "Maze Room 3";
+        }
+        @Override
+        String Description(){
+            if(objects.contains("HAMMER")){
+                return mazeText.MazeRoom3_Desc + mazeText.RustyHammer_Desc;
+            }
+            else{
+                return mazeText.MazeRoom3_Desc;
+            }
+        }
+        @Override
+        String Grab(String targetItem) throws  InterruptedException {
+            if (targetItem.equals("HAMMER")) {
+                return objects.remove("HAMMER") ? mazeText.Grab_Hammer : "";
+            }
+            return draft.genfail;
+        }
 
-    public MazeRoom3() {
-        roomLinks.put("outerbanks", "OuterBanks");
-        roomLinks.put("back", "OuterB");
-        roomLinks.put("out", "OuterBanks");
-        roomLinks.put("exit", "OuterBanks");
-        roomLinks.put("up", "OuterBanks");
-        roomLinks.put("north", "OuterBanks");
-        isLocked = true;
+        public MazeRoom3() {
+            roomLinks.put("outer banks", "Outer Banks");
+            roomLinks.put("back", "Outer Banks");
+            roomLinks.put("out", "Outer Banks");
+            roomLinks.put("exit", "Outer Banks");
+            roomLinks.put("s", "Outer Banks");
+            roomLinks.put("south", "Outer Banks");
+            roomLinks.put("return", "Outer Banks");
+        }
     }
-}
-class MazeRoom6 extends Room {
-    @Override
-    String Name() {
-        return "Maze Room 6";
-    }
-    @Override
-    String Description(){
-          return "There is a fork in the road pick which way to proceed";
-    }
-    
+    class MazeRoom4 extends Room {
+        @Override
+        String Name() {
+            return "Maze Room 4";
+        }
+        @Override
+        String Description(){
+            return mazeText.MazeRoom4_Desc;
+        }
+        
 
-    public MazeRoom6() {
-        roomLinks.put("back", "MazeRoom2");
-        roomLinks.put("MazeRoom2", "MazeRoom2");
-        roomLinks.put("straight", "MazeRoom5");
-        roomLinks.put("east", "MazeRoom5");
-        roomLinks.put("out", "OuterBanks");
-        roomLinks.put("up", "MazeRoom4");
-        roomLinks.put("north", "MazeRoom4");
-        roomLinks.put("exit", "OuterBanks");
-        roomLinks.put("down", "MazeRoom6");
-        roomLinks.put("south", "MazeRoom6");
-        isLocked = true;
+        public MazeRoom4() {
+            roomLinks.put("back", "Maze Room 2");
+            roomLinks.put("out", "Maze Room 2");
+            roomLinks.put("exit", "Maze Room 2");
+            roomLinks.put("down", "Maze Room 2");
+            roomLinks.put("south", "Maze Room 2");
+            roomLinks.put("s", "Maze Room 2");
+        }
     }
-}
+    class MazeRoom5 extends Room {
+        @Override
+        String Name() {
+            return "Maze Room 5";
+        }
+        @Override
+        String Description(){
+            if(objects.contains("TSHIRT")){
+                return mazeText.MazeRoom5_Desc + mazeText.MuddyTshirt_Desc;
+            }
+            else{
+                return mazeText.MazeRoom5_Desc;
+            }
+        }
+        String Grab(String targetItem) throws  InterruptedException {
+            if (targetItem.equals("TSHIRT")) {
+                return objects.remove("TSHIRT") ? mazeText.Grab_TShirt : "";
+            }
+            return draft.genfail;
+        }
 
+        
+
+        public MazeRoom5() {
+            roomLinks.put("back", "Maze Room 2");
+            roomLinks.put("out", "Maze Room 2");
+            roomLinks.put("exit", "Maze Room 2");
+            roomLinks.put("left", "Maze Room 2");
+            roomLinks.put("west", "Maze Room 2"); 
+            roomLinks.put("w", "Maze Room 2"); 
+        }
+    }
+    class MazeRoom6 extends Room {
+        @Override
+        String Name() {
+            return "Maze Room 6";
+        }
+        @Override
+        String Description(){
+            return  mazeText.PathSix_Desc + mazeText.MazeRoom6_Desc;
+        }
+        
+
+        public MazeRoom6() {
+            roomLinks.put("back", "Maze Room 2");
+            roomLinks.put("Maze Room 2", "Maze Room 2");
+            roomLinks.put("straight", "Maze Room 7");
+            roomLinks.put("out", "Maze Room 2");
+            roomLinks.put("up", "Maze Room 2");
+            roomLinks.put("north", "Maze Room 2");
+            roomLinks.put("n", "Maze Room 2");
+            roomLinks.put("exit", "Maze Room 2");
+            roomLinks.put("right", "Maze Room 8");
+            roomLinks.put("left", "Maze Room 7");
+            roomLinks.put("east", "Maze Room 8");
+            roomLinks.put("e", "Maze Room 8");
+            roomLinks.put("west", "Maze Room 7");
+            roomLinks.put("w", "Maze Room 7");
+        }
+    }
+    class MazeRoom7 extends Room {
+        @Override
+        String Name() {
+            return "Maze Room 7";
+        }
+        @Override
+        String Description(){
+            return mazeText.MazeRoom7_Desc;
+        }
+        
+
+        public MazeRoom7() {
+            roomLinks.put("back", "Maze Room 6");
+            roomLinks.put("Maze Room 6", "Maze Room 6");
+            roomLinks.put("out", "Maze Room 6");
+            roomLinks.put("exit", "Maze Room 6");
+            roomLinks.put("down", "Maze Room 10");
+            roomLinks.put("south", "Maze Room 10");
+            roomLinks.put("s", "Maze Room 10");
+            roomLinks.put("left", "Maze Room 6");
+            roomLinks.put("west", "Maze Room 6");
+            roomLinks.put("w", "Maze Room 6");
+        }
+    }
+    class MazeRoom8 extends Room {
+        @Override
+        String Name() { 
+            return "Maze Room 8";
+        }
+        @Override
+        String Description(){
+            if(objects.contains("PHONE")){
+                return mazeText.MazeRoom8_Desc + mazeText.Phone_Desc;
+            }
+            else {
+            return mazeText.MazeRoom8_Desc;
+            }
+        }
+        String Grab(String targetItem) throws  InterruptedException {
+            if (targetItem.equals("PHONE")) {
+                return objects.remove("PHONE") ? mazeText.Grab_Phone : "";
+            }
+            return draft.genfail;
+        }
+
+        
+
+        public MazeRoom8() {
+            roomLinks.put("back", "Maze Room 6");
+            roomLinks.put("Maze Room 6", "Maze Room 6");
+            roomLinks.put("out", "Maze Room 6");
+            roomLinks.put("exit", "Maze Room 6");
+            roomLinks.put("w", "Maze Room 6");
+            roomLinks.put("west", "Maze Room 6");
+            roomLinks.put("down", "Maze Room 9");
+            roomLinks.put("south", "Maze Room 9");
+            roomLinks.put("s", "Maze Room 9");
+        }
+    }
+    class MazeRoom9 extends Room {
+        @Override
+        String Name() {
+            return "Maze Room 9";
+        }
+        @Override
+        String Description() throws InterruptedException {
+            runtime.slowType(mazeText.MazeRoom9_Desc);
+            runtime.slowType(" Leave the prison? (y/n)\n");
+            String n = "";
+            while (!n.equals("y") && !n.equals("n")) {
+                System.out.print("> ");
+                n = runtime.keyboard.nextLine();
+            }
+            if (n.equals( "y") ) {
+                runtime.slowType("You've escaped. At long last, your freedom is once again your own.\n");
+                if (runtime.r.bombImminent >= 0) {
+                    runtime.slowType("And just in time. As the explosions ring out behind you, you can't help but feel a sense of accomplishment.", 20);
+                }
+
+                System.exit(1);
+                return "";
+                
+            }
+            return "";
+        }
+        
+
+        public MazeRoom9() {
+            roomLinks.put("back", "Maze Room 8");
+            roomLinks.put("Maze Room 8", "Maze Room 8");
+            roomLinks.put("out", "Maze Room 8");
+            roomLinks.put("exit", "Maze Room 8");
+            roomLinks.put("up", "Maze Room 8");
+            roomLinks.put("north", "Maze Room 8");
+            roomLinks.put("n", "Maze Room 8");
+            roomLinks.put("return", "Maze Room 8");
+        }
+    }
+    class MazeRoom10 extends Room {
+        @Override
+        String Name() {
+            return "Maze Room 10";
+        }
+        @Override
+        String Description(){
+            return mazeText.MazeRoom10_Desc;
+        }
+        
+
+        public MazeRoom10() {
+            roomLinks.put("back", "Maze Room 7");
+            roomLinks.put("Maze Room 7", "Maze Room 7");
+            roomLinks.put("out", "Maze Room 7");
+            roomLinks.put("exit", "Maze Room 7");
+            roomLinks.put("up", "Maze Room 7");
+            roomLinks.put("north", "Maze Room 7");
+            roomLinks.put("n", "Maze Room 7");
+            roomLinks.put("return", "Maze Room 7");
+        }
+    }
+    //#endregion
 //#endregion

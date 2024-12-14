@@ -58,7 +58,9 @@ public class inputs {
         "acquire",
         "grip",
         "grasp",
-        "seize"
+        "seize",
+        "pull",
+        "toggle"
     };
     static String[] pseud_drop = new String[] {
         "drop",
@@ -77,8 +79,7 @@ public class inputs {
         "i",
         "inventory",
         "items",
-        "item",
-        "e"
+        "item"
     };
     static String[] psued_use = new String[] {
         "u",
@@ -98,6 +99,9 @@ public class inputs {
         if (findInArr(pseud_item_key, other) ) {
             return "KEY";
         }
+        if (findInArr(pseud_item_lever, other) ) {
+            return "LEVER";
+        }
         if (findInArr(pseud_item_pole, other) ) {
             return "POLE";
         }
@@ -107,12 +111,30 @@ public class inputs {
         if (findInArr(pseud_obj_poster, other) ) {
             return "poster";
         }
+        if (findInArr(pseud_obj_chair, other) ) {
+            return "CHAIR";
+        }
+         if (findInArr(pseud_item_hammer, other) ) {
+            return "HAMMER";
+        }
+         if (findInArr(pseud_item_tshirt, other) ) {
+            return "TSHIRT";
+        }
+         if (findInArr(pseud_item_phone, other) ) {
+            return "PHONE";
+        }
         return other;
     }
     static String[] pseud_item_key = new String[] {
         "key",
         "ky",
         "k"
+    };
+    static String[] pseud_item_lever = new String[] {
+        "lever",
+        "switch",
+        "flicky",
+        "levre"
     };
     static String[] pseud_item_pole = new String[] {
         "pole",
@@ -142,16 +164,33 @@ public class inputs {
         "photo",
         "photograph"
     };
-    static String[] pseud_obj_ = new String[] {
-        "poster",
-        "rick",
-        "displate",
-        "favorite",
-        "wall",
-        "picture",
-        "image",
-        "photo",
-        "photograph"
+    static String[] pseud_obj_chair = new String[] {
+        "chair",
+        "seat",
+        "chiar",
+        "seating"
+    };
+    static String[] pseud_item_hammer = new String[] {
+        "hammer",
+        "hamme",
+        "ham",
+        "hammre",
+    };
+    static String[] pseud_item_tshirt = new String[] {
+        "tshirt",
+        "t-shirt",
+        "shirt",
+        "shitr",
+        "shrit",
+    };
+    static String[] pseud_item_phone = new String[] {
+        "phone",
+        "smartphone",
+        "telephone",
+        "iphone",
+        "phon",
+        "android",
+        "samsung"
     };
     //#endregion
 }
